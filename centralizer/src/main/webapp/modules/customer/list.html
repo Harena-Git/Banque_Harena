@@ -1,0 +1,73 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>Customer List</h2>
+    </div>
+    <div class="table-container">
+        <table id="customer-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" class="loading">Loading customers...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function initCustomerList() {
+    fetch('/centralizer/customers')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch customers');
+            }
+            return response.json();
+        })
+        .then(customers => {
+            const tbody = document.querySelector('#customer-table tbody');
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">No customers found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = customers.map(customer => `
+                <tr>
+                    <td>${customer.id}</td>
+                    <td>${customer.firstName} ${customer.lastName}</td>
+                    <td>${customer.email}</td>
+                    <td>${customer.phone || '-'}</td>
+                    <td>
+                        <button class="btn action-btn btn-secondary" onclick="viewCustomer(${customer.id}); return false;">View</button>
+                        <button class="btn action-btn btn-primary" onclick="editCustomer(${customer.id}); return false;">Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.querySelector('#customer-table tbody').innerHTML =
+                '<tr><td colspan="5" style="text-align:center;color:#c33;">Failed to load customers: ' + error.message + '</td></tr>';
+        });
+}
+
+function viewCustomer(id) {
+    console.log('View customer:', id);
+    alert('View customer ' + id + ' - Feature coming soon!');
+    return false;
+}
+
+function editCustomer(id) {
+    console.log('Edit customer:', id);
+    alert('Edit customer ' + id + ' - Feature coming soon!');
+    return false;
+}
+
+initCustomerList();
+</script>

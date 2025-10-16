@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>🏦 Bank</h1>
+        </div>
+
+        <!-- Module Customer -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule('customer')">
+                <span class="module-title">👥 Customer</span>
+                <span class="arrow" id="arrow-customer">▶</span>
+            </div>
+            <div class="dropdown" id="dropdown-customer">
+                <a href="#" class="dropdown-item" onclick="loadPage('customer', 'list')">Customer List</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('customer', 'new')">New Customer</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('customer', 'search')">Search Customer</a>
+            </div>
+        </div>
+
+        <!-- Module Current Account -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule('current')">
+                <span class="module-title">💳 Current Account</span>
+                <span class="arrow" id="arrow-current">▶</span>
+            </div>
+            <div class="dropdown" id="dropdown-current">
+                <a href="#" class="dropdown-item" onclick="loadPage('current', 'list')">Account List</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('current', 'new')">New Account</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('current', 'deposit')">Deposit</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('current', 'withdraw')">Withdraw</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('current', 'transactions')">Transactions</a>
+            </div>
+        </div>
+
+        <!-- Module Deposit Account -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule('deposit')">
+                <span class="module-title">🏦 Deposit Account</span>
+                <span class="arrow" id="arrow-deposit">▶</span>
+            </div>
+            <div class="dropdown" id="dropdown-deposit">
+                <a href="#" class="dropdown-item" onclick="loadPage('deposit', 'list')">Account List</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('deposit', 'new')">New Account</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('deposit', 'deposit')">Deposit</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('deposit', 'withdraw')">Withdraw</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('deposit', 'transactions')">Transactions</a>
+            </div>
+        </div>
+
+        <!-- Module Loan -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule('loan')">
+                <span class="module-title">💰 Loan</span>
+                <span class="arrow" id="arrow-loan">▶</span>
+            </div>
+            <div class="dropdown" id="dropdown-loan">
+                <a href="#" class="dropdown-item" onclick="loadPage('loan', 'list')">Loan List</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('loan', 'new')">New Loan</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('loan', 'payment')">Make Payment</a>
+                <a href="#" class="dropdown-item" onclick="loadPage('loan', 'active')">Active Loans</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content">
+        <div id="content-body">
+            <div class="welcome-message">
+                <h2>Welcome to Bank Management System</h2>
+                <p>Select a module from the sidebar to get started</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
+

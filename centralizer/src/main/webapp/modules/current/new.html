@@ -1,0 +1,65 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>New Current Account</h2>
+    </div>
+    <form id="new-current-form">
+        <div class="form-group">
+            <label for="customer-id">Customer *</label>
+            <select id="customer-id" name="customerId" required>
+                <option value="">Select a customer</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="initial-balance">Initial Balance</label>
+            <input type="number" id="initial-balance" name="initialBalance" step="0.01" value="0.00">
+        </div>
+        <div class="form-group">
+            <label for="overdraft">Overdraft Limit</label>
+            <input type="number" id="overdraft" name="overdraft" step="0.01" value="0.00">
+        </div>
+        <div style="margin-top: 24px;">
+            <button type="submit" class="btn btn-primary">Create Account</button>
+            <button type="reset" class="btn btn-secondary" style="margin-left: 8px;">Reset</button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Load customers for dropdown
+fetch('/customer/api/customers')
+    .then(response => response.json())
+    .then(customers => {
+        const select = document.getElementById('customer-id');
+        customers.forEach(customer => {
+            const option = document.createElement('option');
+            option.value = customer.id;
+            option.textContent = `${customer.name} (${customer.email})`;
+            select.appendChild(option);
+        });
+    });
+
+document.getElementById('new-current-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = {
+        customerId: document.getElementById('customer-id').value,
+        initialBalance: parseFloat(document.getElementById('initial-balance').value),
+        overdraft: parseFloat(document.getElementById('overdraft').value)
+    };
+
+    fetch('/current/api/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        showMessage('Current account created successfully!');
+        this.reset();
+    })
+    .catch(error => {
+        showMessage('Failed to create account', 'error');
+    });
+});
+</script>
+

@@ -1,0 +1,6 @@
+@deposit_HostAddress = http://localhost:5228
+
+GET {{deposit_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

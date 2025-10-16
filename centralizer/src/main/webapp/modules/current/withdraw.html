@@ -1,0 +1,50 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>Withdraw from Current Account</h2>
+    </div>
+    <form id="withdraw-form">
+        <div class="form-group">
+            <label for="account-number">Account Number *</label>
+            <input type="text" id="account-number" name="accountNumber" required>
+        </div>
+        <div class="form-group">
+            <label for="amount">Amount *</label>
+            <input type="number" id="amount" name="amount" step="0.01" min="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" placeholder="Optional">
+        </div>
+        <div style="margin-top: 24px;">
+            <button type="submit" class="btn btn-primary">Make Withdrawal</button>
+            <button type="reset" class="btn btn-secondary" style="margin-left: 8px;">Reset</button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('withdraw-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = {
+        accountNumber: document.getElementById('account-number').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        description: document.getElementById('description').value
+    };
+
+    fetch('/current/api/transactions/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        showMessage('Withdrawal successful!');
+        this.reset();
+    })
+    .catch(error => {
+        showMessage('Failed to process withdrawal', 'error');
+    });
+});
+</script>
+

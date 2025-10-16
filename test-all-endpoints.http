@@ -1,0 +1,209 @@
+### ========================================
+### CUSTOMER ENDPOINTS
+### ========================================
+
+### Get all customers
+GET http://localhost:8080/centralizer/customers
+
+### Get customer by ID
+GET http://localhost:8080/centralizer/customers/1
+
+### Get customer by Email
+GET http://localhost:8080/centralizer/customers/email/jean.dupont@example.com
+
+### Create new customer
+POST http://localhost:8080/centralizer/customers
+Content-Type: application/json
+
+{
+  "firstName": "Jean",
+  "lastName": "Dupont",
+  "email": "jean.dupont@example.com",
+  "phone": "0612345678",
+  "address": "123 Rue de Paris, 75001 Paris"
+}
+
+### Update customer
+PUT http://localhost:8080/centralizer/customers/1
+Content-Type: application/json
+
+{
+  "firstName": "Mana",
+  "lastName": "Dupont",
+  "email": "jean.dupont@example.com",
+  "phone": "0612345679",
+  "address": "456 Avenue des Champs, 75008 Paris"
+}
+
+### Delete customer
+DELETE http://localhost:8080/centralizer/customers/1
+
+### Add deposit account to customer
+POST http://localhost:8080/centralizer/customers/1/deposit-accounts/101
+
+### Add current account to customer
+POST http://localhost:8080/centralizer/customers/1/current-accounts/201
+
+### Add loan to customer
+POST http://localhost:8080/centralizer/customers/1/loans/301
+
+
+### ========================================
+### CURRENT ACCOUNT ENDPOINTS
+### ========================================
+
+### Get all current accounts
+GET http://localhost:8080/centralizer/current-accounts
+
+### Get current account by ID
+GET http://localhost:8080/centralizer/current-accounts/1
+
+### Get current accounts by customer ID
+GET http://localhost:8080/centralizer/current-accounts/customer/1
+
+### Get current account balance
+GET http://localhost:8080/centralizer/current-accounts/1/balance
+
+### Get current account transactions
+GET http://localhost:8080/centralizer/current-accounts/1/transactions
+
+### Create new current account
+POST http://localhost:8080/centralizer/current-accounts
+Content-Type: application/json
+
+{
+  "accountNumber": "CA-001",
+  "customerId": 1,
+  "balance": 1000.00,
+  "status": "ACTIVE"
+}
+
+### Deposit to current account
+POST http://localhost:8080/centralizer/current-accounts/1/deposit
+Content-Type: application/json
+
+{
+  "amount": 500.00,
+  "description": "Salary deposit"
+}
+
+### Withdraw from current account
+POST http://localhost:8080/centralizer/current-accounts/1/withdraw
+Content-Type: application/json
+
+{
+  "amount": 200.00,
+  "description": "ATM withdrawal"
+}
+
+### Delete current account
+DELETE http://localhost:8080/centralizer/current-accounts/1
+
+
+### ========================================
+### LOAN ENDPOINTS
+### ========================================
+
+### Get all loans
+GET http://localhost:8080/centralizer/loans
+
+### Get loan by ID
+GET http://localhost:8080/centralizer/loans/1
+
+### Get loans by customer ID
+GET http://localhost:8080/centralizer/loans/customer/1
+
+### Get active loans
+GET http://localhost:8080/centralizer/loans/active
+
+### Get loan remaining amount
+GET http://localhost:8080/centralizer/loans/1/remaining
+
+### Get loan total amount due
+GET http://localhost:8080/centralizer/loans/1/total
+
+### Get loan payment history
+GET http://localhost:8080/centralizer/loans/1/payments
+
+### Create new loan
+POST http://localhost:8080/centralizer/loans
+Content-Type: application/json
+
+{
+  "loanNumber": "L-001",
+  "customerId": 1,
+  "principalAmount": 10000.00,
+  "annualRate": 5.5,
+  "durationMonths": 24
+}
+
+### Make loan payment
+POST http://localhost:8080/centralizer/loans/1/payment
+Content-Type: application/json
+
+{
+  "amount": 500.00,
+  "notes": "Monthly payment"
+}
+
+### Update loan status
+PUT http://localhost:8080/centralizer/loans/1/status
+Content-Type: application/json
+
+{
+  "status": "PAID"
+}
+
+
+### ========================================
+### DEPOSIT ACCOUNT ENDPOINTS (C# Module)
+### ========================================
+
+### Get all deposit accounts
+GET http://localhost:5000/api/DepositAccounts
+
+### Get deposit account by ID
+GET http://localhost:5000/api/DepositAccounts/1
+
+### Get deposit accounts by customer ID
+GET http://localhost:5000/api/DepositAccounts/customer/1
+
+### Get deposit account balance
+GET http://localhost:5000/api/DepositAccounts/1/balance
+
+### Get deposit account transactions
+GET http://localhost:5000/api/DepositAccounts/1/transactions
+
+### Create new deposit account
+POST http://localhost:5000/api/DepositAccounts
+Content-Type: application/json
+
+{
+  "accountNumber": "DA-001",
+  "customerId": 1,
+  "balance": 5000.00,
+  "annualRate": 2.5,
+  "monthlyWithdrawalLimit": 3
+}
+
+### Deposit to deposit account
+POST http://localhost:5000/api/DepositAccounts/1/deposit
+Content-Type: application/json
+
+{
+  "amount": 1000.00,
+  "description": "Savings"
+}
+
+### Withdraw from deposit account
+POST http://localhost:5000/api/DepositAccounts/1/withdraw
+Content-Type: application/json
+
+{
+  "amount": 500.00,
+  "description": "Emergency withdrawal"
+}
+
+### Delete deposit account
+DELETE http://localhost:5000/api/DepositAccounts/1
+

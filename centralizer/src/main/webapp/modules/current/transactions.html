@@ -1,0 +1,130 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>Current Account Transactions</h2>
+    </div>
+    <div class="form-group">
+        <label for="account-filter">Filter by Account Number</label>
+        <input type="text" id="account-filter" placeholder="Enter account number...">
+    </div>
+    <button class="btn btn-primary" onclick="loadTransactions()">Load Transactions</button>
+
+    <div id="transactions-container" style="margin-top: 32px;"></div>
+</div>
+
+<script>
+function loadTransactions() {
+    const accountNumber = document.getElementById('account-filter').value;
+    const container = document.getElementById('transactions-container');
+
+    container.innerHTML = '<p class="loading">Loading transactions...</p>';
+
+    const url = accountNumber
+        ? `/current/api/transactions?accountNumber=${encodeURIComponent(accountNumber)}`
+        : '/current/api/transactions';
+
+    fetch(url)
+        .then(response => response.json())
+        .then(transactions => {
+            if (transactions.length === 0) {
+                container.innerHTML = '<p style="color:#999;">No transactions found</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Account</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Balance</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${transactions.map(tx => `
+                            <tr>
+                                <td>${new Date(tx.date).toLocaleString()}</td>
+                                <td>${tx.accountNumber}</td>
+                                <td>${tx.type}</td>
+                                <td style="color:${tx.type === 'DEPOSIT' ? '#3c3' : '#c33'}">${tx.amount.toFixed(2)} €</td>
+                                <td>${tx.balance.toFixed(2)} €</td>
+                                <td>${tx.description || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        })
+        .catch(error => {
+            container.innerHTML = '<p style="color:#c33;">Failed to load transactions</p>';
+        });
+}
+</script>
+<div class="page-container">
+    <div class="page-header">
+        <h2>Current Account List</h2>
+    </div>
+    <div class="table-container">
+        <table id="current-table">
+            <thead>
+                <tr>
+                    <th>Account Number</th>
+                    <th>Customer</th>
+                    <th>Balance</th>
+                    <th>Overdraft</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="6" class="loading">Loading accounts...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function initCurrentList() {
+    fetch('/current/api/accounts')
+        .then(response => response.json())
+        .then(accounts => {
+            const tbody = document.querySelector('#current-table tbody');
+            if (accounts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;">No accounts found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = accounts.map(account => `
+                <tr>
+                    <td>${account.accountNumber}</td>
+                    <td>${account.customerName}</td>
+                    <td>${account.balance.toFixed(2)} €</td>
+                    <td>${account.overdraft.toFixed(2)} €</td>
+                    <td>${account.status}</td>
+                    <td>
+                        <button class="btn action-btn btn-secondary" onclick="viewAccount('${account.accountNumber}')">View</button>
+                        <button class="btn action-btn btn-primary" onclick="manageAccount('${account.accountNumber}')">Manage</button>
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => {
+            document.querySelector('#current-table tbody').innerHTML =
+                '<tr><td colspan="6" style="text-align:center;color:#c33;">Failed to load accounts</td></tr>';
+        });
+}
+
+function viewAccount(accountNumber) {
+    console.log('View account:', accountNumber);
+}
+
+function manageAccount(accountNumber) {
+    console.log('Manage account:', accountNumber);
+}
+
+initCurrentList();
+</script>
+

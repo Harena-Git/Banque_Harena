@@ -1,0 +1,151 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>Active Loans</h2>
+    </div>
+    <div class="form-group">
+        <label for="customer-filter">Filter by Customer</label>
+        <input type="text" id="customer-filter" placeholder="Enter customer name or ID...">
+    </div>
+    <button class="btn btn-primary" onclick="loadActiveLoans()">Load Active Loans</button>
+
+    <div id="loans-container" style="margin-top: 32px;"></div>
+</div>
+
+<script>
+function loadActiveLoans() {
+    const customerFilter = document.getElementById('customer-filter').value;
+    const container = document.getElementById('loans-container');
+
+    container.innerHTML = '<p class="loading">Loading active loans...</p>';
+
+    const url = customerFilter
+        ? `/loan/api/loans/active?customer=${encodeURIComponent(customerFilter)}`
+        : '/loan/api/loans/active';
+
+    fetch(url)
+        .then(response => response.json())
+        .then(loans => {
+            if (loans.length === 0) {
+                container.innerHTML = '<p style="color:#999;">No active loans found</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Loan ID</th>
+                            <th>Customer</th>
+                            <th>Original Amount</th>
+                            <th>Remaining</th>
+                            <th>Interest Rate</th>
+                            <th>Monthly Payment</th>
+                            <th>Next Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${loans.map(loan => `
+                            <tr>
+                                <td>${loan.id}</td>
+                                <td>${loan.customerName}</td>
+                                <td>${loan.amount.toFixed(2)} €</td>
+                                <td>${loan.remainingAmount.toFixed(2)} €</td>
+                                <td>${loan.interestRate}%</td>
+                                <td>${loan.monthlyPayment.toFixed(2)} €</td>
+                                <td>${new Date(loan.nextPaymentDate).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn action-btn btn-primary" onclick="makePayment(${loan.id})">Pay</button>
+                                    <button class="btn action-btn btn-secondary" onclick="viewDetails(${loan.id})">Details</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        })
+        .catch(error => {
+            container.innerHTML = '<p style="color:#c33;">Failed to load active loans</p>';
+        });
+}
+
+function makePayment(loanId) {
+    console.log('Make payment for loan:', loanId);
+    loadPage('loan', 'payment');
+}
+
+function viewDetails(loanId) {
+    console.log('View loan details:', loanId);
+}
+
+// Load active loans on page load
+loadActiveLoans();
+</script>
+<div class="page-container">
+    <div class="page-header">
+        <h2>Loan List</h2>
+    </div>
+    <div class="table-container">
+        <table id="loan-table">
+            <thead>
+                <tr>
+                    <th>Loan ID</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Interest Rate</th>
+                    <th>Remaining</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="loading">Loading loans...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function initLoanList() {
+    fetch('/loan/api/loans')
+        .then(response => response.json())
+        .then(loans => {
+            const tbody = document.querySelector('#loan-table tbody');
+            if (loans.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">No loans found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = loans.map(loan => `
+                <tr>
+                    <td>${loan.id}</td>
+                    <td>${loan.customerName}</td>
+                    <td>${loan.amount.toFixed(2)} €</td>
+                    <td>${loan.interestRate}%</td>
+                    <td>${loan.remainingAmount.toFixed(2)} €</td>
+                    <td>${loan.status}</td>
+                    <td>
+                        <button class="btn action-btn btn-secondary" onclick="viewLoan(${loan.id})">View</button>
+                        <button class="btn action-btn btn-primary" onclick="manageLoan(${loan.id})">Manage</button>
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => {
+            document.querySelector('#loan-table tbody').innerHTML =
+                '<tr><td colspan="7" style="text-align:center;color:#c33;">Failed to load loans</td></tr>';
+        });
+}
+
+function viewLoan(id) {
+    console.log('View loan:', id);
+}
+
+function manageLoan(id) {
+    console.log('Manage loan:', id);
+}
+
+initLoanList();
+</script>
+

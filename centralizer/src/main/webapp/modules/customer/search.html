@@ -1,0 +1,152 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>Search Customer</h2>
+    </div>
+    <div class="form-group">
+        <label for="search-query">Search by name, email or phone</label>
+        <input type="text" id="search-query" placeholder="Enter search term..." onkeypress="if(event.key==='Enter'){searchCustomers(); return false;}">
+    </div>
+    <button class="btn btn-primary" onclick="searchCustomers(); return false;">Search</button>
+
+    <div id="search-results" style="margin-top: 32px;"></div>
+</div>
+
+<script>
+function searchCustomers() {
+    const query = document.getElementById('search-query').value;
+    const resultsDiv = document.getElementById('search-results');
+
+    if (!query) {
+        resultsDiv.innerHTML = '<p style="color:#999;">Please enter a search term</p>';
+        return false;
+    }
+
+    resultsDiv.innerHTML = '<p class="loading">Searching...</p>';
+
+    // Try email search first
+    fetch(`/centralizer/customers/email/${encodeURIComponent(query)}`)
+        .then(response => {
+            if (!response.ok) {
+                // If email search fails, get all customers and filter client-side
+                return fetch('/centralizer/customers')
+                    .then(r => r.json())
+                    .then(all => all.filter(c =>
+                        (c.firstName && c.firstName.toLowerCase().includes(query.toLowerCase())) ||
+                        (c.lastName && c.lastName.toLowerCase().includes(query.toLowerCase())) ||
+                        (c.email && c.email.toLowerCase().includes(query.toLowerCase())) ||
+                        (c.phone && c.phone.includes(query))
+                    ));
+            }
+            return response.json().then(customer => [customer]);
+        })
+        .then(customers => {
+            if (customers.length === 0) {
+                resultsDiv.innerHTML = '<p style="color:#999;">No customers found</p>';
+                return;
+            }
+
+            resultsDiv.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${customers.map(customer => `
+                            <tr>
+                                <td>${customer.id}</td>
+                                <td>${customer.firstName} ${customer.lastName}</td>
+                                <td>${customer.email}</td>
+                                <td>${customer.phone || '-'}</td>
+                                <td>
+                                    <button class="btn action-btn btn-primary" onclick="viewCustomer(${customer.id}); return false;">View</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultsDiv.innerHTML = '<p style="color:#c33;">Search failed: ' + error.message + '</p>';
+        });
+
+    return false;
+}
+
+function viewCustomer(id) {
+    console.log('View customer:', id);
+    alert('View customer ' + id + ' - Feature coming soon!');
+    return false;
+}
+</script>
+<div class="page-container">
+    <div class="page-header">
+        <h2>Customer List</h2>
+    </div>
+    <div class="table-container">
+        <table id="customer-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" class="loading">Loading customers...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// Load customers from API
+function initCustomerList() {
+    fetch('/customer/api/customers')
+        .then(response => response.json())
+        .then(customers => {
+            const tbody = document.querySelector('#customer-table tbody');
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">No customers found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = customers.map(customer => `
+                <tr>
+                    <td>${customer.id}</td>
+                    <td>${customer.name}</td>
+                    <td>${customer.email}</td>
+                    <td>${customer.phone}</td>
+                    <td>
+                        <button class="btn action-btn btn-secondary" onclick="viewCustomer(${customer.id})">View</button>
+                        <button class="btn action-btn btn-primary" onclick="editCustomer(${customer.id})">Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => {
+            document.querySelector('#customer-table tbody').innerHTML =
+                '<tr><td colspan="5" style="text-align:center;color:#c33;">Failed to load customers</td></tr>';
+        });
+}
+
+function viewCustomer(id) {
+    console.log('View customer:', id);
+}
+
+function editCustomer(id) {
+    console.log('Edit customer:', id);
+}
+
+initCustomerList();
+</script>
