@@ -4,68 +4,21 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bank</groupId>
-    <artifactId>Bank</artifactId>
+    <artifactId>Bank-parent</artifactId>
     <version>1.0</version>
-    <packaging>ear</packaging>
+    <packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.bank</groupId>
-            <artifactId>centralizer</artifactId>
-            <version>${project.version}</version>
-            <type>war</type>
-        </dependency>
-        <dependency>
-            <groupId>com.bank</groupId>
-            <artifactId>current</artifactId>
-            <version>${project.version}</version>
-            <type>ejb</type>
-        </dependency>
-        <dependency>
-            <groupId>com.bank</groupId>
-            <artifactId>loan</artifactId>
-            <version>${project.version}</version>
-            <type>ejb</type>
-        </dependency>
-        <dependency>
-            <groupId>com.bank</groupId>
-            <artifactId>customer</artifactId>
-            <version>${project.version}</version>
-            <type>ejb</type>
-        </dependency>
-    </dependencies>
+    <modules>
+        <module>current</module>
+        <module>loan</module>
+        <module>customer</module>
+        <module>centralizer</module>
+        <module>Bank-ear</module>
+    </modules>
 
-    <build>
-        <finalName>Bank</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-ear-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <version>7</version>
-                    <modules>
-                        <webModule>
-                            <groupId>com.bank</groupId>
-                            <artifactId>centralizer</artifactId>
-                            <contextRoot>/centralizer</contextRoot>
-                        </webModule>
-                        <ejbModule>
-                            <groupId>com.bank</groupId>
-                            <artifactId>current</artifactId>
-                        </ejbModule>
-                        <ejbModule>
-                            <groupId>com.bank</groupId>
-                            <artifactId>loan</artifactId>
-                        </ejbModule>
-                        <ejbModule>
-                            <groupId>com.bank</groupId>
-                            <artifactId>customer</artifactId>
-                        </ejbModule>
-                    </modules>
-                    <defaultLibBundleDir>lib</defaultLibBundleDir>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 </project>
