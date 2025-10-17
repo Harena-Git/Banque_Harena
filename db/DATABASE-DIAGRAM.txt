@@ -1,0 +1,341 @@
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                    DIAGRAMME DE LA BASE DE DONNÉES - BANK APPLICATION                               ║
+║                                              Base de données: s5-bank                                                ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                        MICROSERVICE 1: CUSTOMER (Java/EJB)                                         │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────┐
+    │         customers                   │
+    ├─────────────────────────────────────┤
+    │ PK  id (BIGSERIAL)                  │
+    │     first_name (VARCHAR)            │
+    │     last_name (VARCHAR)             │
+    │ UQ  email (VARCHAR)                 │
+    │     phone (VARCHAR)                 │
+    │     address (VARCHAR)               │
+    │     created_at (TIMESTAMP)          │
+    │     updated_at (TIMESTAMP)          │
+    └─────────────────────────────────────┘
+              │
+              ├──────────────────────────────────────────────────────────┐
+              │                                                          │
+              ▼                                                          ▼
+    ┌──────────────────────────────┐                          ┌──────────────────────────────┐
+    │ customer_deposit_accounts    │                          │ customer_current_accounts    │
+    ├──────────────────────────────┤                          ├──────────────────────────────┤
+    │ PK,FK customer_id            │                          │ PK,FK customer_id            │
+    │ PK    deposit_account_id     │                          │ PK    current_account_id     │
+    └──────────────────────────────┘                          └──────────────────────────────┘
+              │                                                          │
+              │ (Référence vers                                          │ (Référence vers
+              │  deposit_accounts.id)                                    │  current_accounts.id)
+              │                                                          │
+              │                                                          │
+              ▼                                                          ▼
+    ┌──────────────────────────────┐
+    │ customer_loans               │
+    ├──────────────────────────────┤
+    │ PK,FK customer_id            │
+    │ PK    loan_id                │
+    └──────────────────────────────┘
+              │
+              │ (Référence vers
+              │  loans.id)
+              │
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                        MICROSERVICE 2: CURRENT (Java/EJB)                                          │
+│                                          Comptes Courants                                                          │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────┐
+    │      current_accounts               │
+    ├─────────────────────────────────────┤
+    │ PK  id (BIGSERIAL)                  │
+    │ UQ  account_number (VARCHAR)        │
+    │     customer_id (BIGINT)            │  ← Référence vers customers.id
+    │     balance (DECIMAL 19,2)          │
+    │     status (VARCHAR)                │  ← ACTIVE, SUSPENDED, CLOSED
+    │     created_at (TIMESTAMP)          │
+    │     updated_at (TIMESTAMP)          │
+    └─────────────────────────────────────┘
+              │
+              │ 1:N
+              │
+              ▼
+    ┌─────────────────────────────────────┐
+    │    current_transactions             │
+    ├─────────────────────────────────────┤
+    │ PK  id (BIGSERIAL)                  │
+    │ FK  account_id (BIGINT)             │  → current_accounts.id
+    │     type (VARCHAR)                  │  ← DEPOSIT, WITHDRAWAL, TRANSFER_IN,
+    │     amount (DECIMAL 19,2)           │    TRANSFER_OUT, FEE, INTEREST
+    │     balance_after (DECIMAL 19,2)    │
+    │     description (VARCHAR 500)       │
+    │     transaction_date (TIMESTAMP)    │
+    └─────────────────────────────────────┘
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                         MICROSERVICE 3: LOAN (Java/EJB)                                            │
+│                                           Prêts Bancaires                                                          │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────┐
+    │           loans                     │
+    ├─────────────────────────────────────┤
+    │ PK  id (BIGSERIAL)                  │
+    │ UQ  loan_number (VARCHAR)           │
+    │     customer_id (BIGINT)            │  ← Référence vers customers.id
+    │     principal_amount (DECIMAL 19,2) │
+    │     annual_rate (DECIMAL 5,2)       │
+    │     duration_months (INTEGER)       │
+    │     total_amount_due (DECIMAL 19,2) │  ← Principal + Intérêts
+    │     remaining_amount (DECIMAL 19,2) │
+    │     start_date (TIMESTAMP)          │
+    │     end_date (TIMESTAMP)            │
+    │     status (VARCHAR)                │  ← ACTIVE, PAID, DEFAULTED, CANCELLED
+    │     created_at (TIMESTAMP)          │
+    │     updated_at (TIMESTAMP)          │
+    └─────────────────────────────────────┘
+              │
+              │ 1:N
+              │
+              ▼
+    ┌─────────────────────────────────────┐
+    │       loan_payments                 │
+    ├─────────────────────────────────────┤
+    │ PK  id (BIGSERIAL)                  │
+    │ FK  loan_id (BIGINT)                │  → loans.id
+    │     amount (DECIMAL 19,2)           │
+    │     remaining_after_payment         │
+    │         (DECIMAL 19,2)              │
+    │     payment_date (TIMESTAMP)        │
+    │     notes (VARCHAR 500)             │
+    └─────────────────────────────────────┘
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                       MICROSERVICE 4: DEPOSIT (C# / ASP.NET)                                       │
+│                                         Comptes d'Épargne                                                          │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────┐
+    │      deposit_accounts               │
+    ├─────────────────────────────────────┤
+    │ PK  id (BIGSERIAL)                  │
+    │ UQ  account_number (VARCHAR 50)     │
+    │     customer_id (BIGINT)            │  ← Référence vers customers.id
+    │     balance (DECIMAL 19,2)          │  ← Ne peut pas être négatif
+    │     annual_rate (DECIMAL 5,2)       │  ← Taux d'intérêt annuel
+    │     monthly_withdrawal_limit (INT)  │  ← Généralement 3
+    │     withdrawals_this_month (INT)    │  ← Compteur de retraits
+    │     status (VARCHAR 20)             │  ← ACTIVE, SUSPENDED, CLOSED
+    │     created_at (TIMESTAMP)          │
+    │     updated_at (TIMESTAMP)          │
+    └─────────────────────────────────────┘
+              │
+              │ 1:N
+              │
+              ▼
+    ┌─────────────────────────────────────┐
+    │    deposit_transactions             │
+    ├─────────────────────────────────────┤
+    │ PK  id (BIGSERIAL)                  │
+    │ FK  account_id (BIGINT)             │  → deposit_accounts.id
+    │     type (VARCHAR 20)               │  ← DEPOSIT, WITHDRAWAL
+    │     amount (DECIMAL 19,2)           │
+    │     balance_after (DECIMAL 19,2)    │
+    │     description (VARCHAR 500)       │
+    │     transaction_date (TIMESTAMP)    │
+    └─────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                              VUES ET FONCTIONS                                                       ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                  VUES                                                              │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │         v_customer_accounts_summary                         │
+    ├─────────────────────────────────────────────────────────────┤
+    │ Résumé du nombre de comptes et prêts par client            │
+    │                                                             │
+    │ Colonnes:                                                   │
+    │   - customer_id                                             │
+    │   - first_name, last_name, email                            │
+    │   - current_accounts_count                                  │
+    │   - deposit_accounts_count                                  │
+    │   - loans_count                                             │
+    └─────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │           v_customer_total_balance                          │
+    ├─────────────────────────────────────────────────────────────┤
+    │ Solde total (courant + épargne) par client                 │
+    │                                                             │
+    │ Colonnes:                                                   │
+    │   - customer_id                                             │
+    │   - first_name, last_name                                   │
+    │   - total_current_balance                                   │
+    │   - total_deposit_balance                                   │
+    │   - total_balance                                           │
+    └─────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                FONCTIONS                                                           │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │         calculate_loan_interest()                           │
+    ├─────────────────────────────────────────────────────────────┤
+    │ Calcule le montant des intérêts pour un prêt               │
+    │                                                             │
+    │ Paramètres:                                                 │
+    │   - p_principal (DECIMAL)                                   │
+    │   - p_annual_rate (DECIMAL)                                 │
+    │   - p_duration_months (INTEGER)                             │
+    │                                                             │
+    │ Retourne: DECIMAL (montant des intérêts)                   │
+    │                                                             │
+    │ Formule: Principal × (Taux/100) × (Durée/12)               │
+    └─────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │         can_withdraw_from_deposit()                         │
+    ├─────────────────────────────────────────────────────────────┤
+    │ Vérifie si un retrait est autorisé                         │
+    │ (limite mensuelle non atteinte)                             │
+    │                                                             │
+    │ Paramètres:                                                 │
+    │   - p_account_id (BIGINT)                                   │
+    │                                                             │
+    │ Retourne: BOOLEAN                                           │
+    │   - true: retrait autorisé                                  │
+    │   - false: limite atteinte                                  │
+    └─────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                            FLUX DE DONNÉES                                                           ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    EXEMPLE: Création d'un client complet                                           │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    1. Créer le client
+       ┌─────────────────────────┐
+       │ INSERT INTO customers   │
+       │ id = 1                  │
+       │ email = jean@email.com  │
+       └─────────────────────────┘
+                 │
+                 ├──────────────────────────────────────────────────┐
+                 │                                                  │
+                 ▼                                                  ▼
+    2. Créer compte courant                          3. Créer compte épargne
+       ┌─────────────────────────┐                      ┌─────────────────────────┐
+       │ INSERT INTO             │                      │ INSERT INTO             │
+       │ current_accounts        │                      │ deposit_accounts        │
+       │ id = 10                 │                      │ id = 20                 │
+       │ customer_id = 1         │                      │ customer_id = 1         │
+       │ balance = 0             │                      │ balance = 0             │
+       └─────────────────────────┘                      └─────────────────────────┘
+                 │                                                  │
+                 ▼                                                  ▼
+    4. Lier au client                                5. Lier au client
+       ┌─────────────────────────┐                      ┌─────────────────────────┐
+       │ INSERT INTO             │                      │ INSERT INTO             │
+       │ customer_current_       │                      │ customer_deposit_       │
+       │ accounts                │                      │ accounts                │
+       │ customer_id = 1         │                      │ customer_id = 1         │
+       │ current_account_id = 10 │                      │ deposit_account_id = 20 │
+       └─────────────────────────┘                      └─────────────────────────┘
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    EXEMPLE: Transaction sur compte courant                                         │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    État initial: balance = 1000€
+
+    1. Client dépose 500€
+       ┌─────────────────────────────────────┐
+       │ UPDATE current_accounts             │
+       │ SET balance = 1000 + 500 = 1500     │
+       │ WHERE id = 10                       │
+       └─────────────────────────────────────┘
+                 │
+                 ▼
+       ┌─────────────────────────────────────┐
+       │ INSERT INTO current_transactions    │
+       │ account_id = 10                     │
+       │ type = 'DEPOSIT'                    │
+       │ amount = 500                        │
+       │ balance_after = 1500                │
+       └─────────────────────────────────────┘
+
+    État final: balance = 1500€
+
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    EXEMPLE: Remboursement de prêt                                                  │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+    État initial: 
+    - total_amount_due = 11100€
+    - remaining_amount = 11100€
+
+    1. Client rembourse 1000€
+       ┌─────────────────────────────────────┐
+       │ UPDATE loans                        │
+       │ SET remaining_amount =              │
+       │     11100 - 1000 = 10100            │
+       │ WHERE id = 30                       │
+       └─────────────────────────────────────┘
+                 │
+                 ▼
+       ┌─────────────────────────────────────┐
+       │ INSERT INTO loan_payments           │
+       │ loan_id = 30                        │
+       │ amount = 1000                       │
+       │ remaining_after_payment = 10100     │
+       └─────────────────────────────────────┘
+
+    État final: remaining_amount = 10100€
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                              LÉGENDE                                                                 ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+    PK  = Primary Key (Clé primaire)
+    FK  = Foreign Key (Clé étrangère)
+    UQ  = Unique (Contrainte d'unicité)
+    1:N = Relation un-à-plusieurs
+    ←   = Référence vers (pas de clé étrangère physique entre microservices)
+    →   = Clé étrangère physique (au sein d'un même microservice)
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                         STATISTIQUES                                                                 ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+    Total de tables:     10
+    Total de vues:       2
+    Total de fonctions:  2
+
+    Répartition par microservice:
+    - Customer:  4 tables (1 principale + 3 de liaison)
+    - Current:   2 tables (1 compte + 1 transactions)
+    - Loan:      2 tables (1 prêt + 1 remboursements)
+    - Deposit:   2 tables (1 compte + 1 transactions)

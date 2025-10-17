@@ -81,6 +81,36 @@ The application consists of **4 main modules** and a **centralizer**:
 
 ---
 
+## 🗄️ Database
+
+### Database Structure
+
+The application uses a **single PostgreSQL database** (`s5-bank`) shared by all microservices.
+
+**Documentation:**
+- **📄 SQL Script**: `Create.sql` - Complete database creation script
+- **📖 Detailed Explanation**: `DATABASE-EXPLANATION.md` - Full documentation of tables and relationships
+- **📊 Visual Diagram**: `DATABASE-DIAGRAM.txt` - ASCII diagram of the database structure
+
+**Quick Setup:**
+```sql
+-- Execute the complete script
+psql -U postgres -d s5-bank -f Create.sql
+```
+
+### Database Overview
+
+| Microservice | Tables | Description |
+|--------------|--------|-------------|
+| **Customer** | 4 tables | Customer profiles and account associations |
+| **Current** | 2 tables | Current accounts and transactions |
+| **Loan** | 2 tables | Loans and repayments |
+| **Deposit** | 2 tables | Savings accounts and transactions |
+
+**Total**: 10 tables + 2 views + 2 functions
+
+---
+
 ## 🚀 Deployment
 
 ### Quick Start
@@ -98,7 +128,11 @@ The application consists of **4 main modules** and a **centralizer**:
 
 3. **Create Database**
    ```sql
+   -- Option 1: Simple creation
    CREATE DATABASE "s5-bank" WITH ENCODING 'UTF8';
+   
+   -- Option 2: Use the complete script
+   psql -U postgres -d s5-bank -f Create.sql
    ```
 
 4. **Configure and Deploy**
@@ -116,20 +150,25 @@ The application consists of **4 main modules** and a **centralizer**:
 - **📋 Deployment Checklist**: `DEPLOYMENT-CHECKLIST.md`
 - **📖 Complete Setup Guide**: `WILDFLY-SETUP-GUIDE.md`
 - **🔧 Configuration Scripts**: `wildfly-scripts/` folder
+- **🗄️ Database Documentation**: `DATABASE-EXPLANATION.md`
 
 ### Project Structure
 
 ```
 Banque_Harena/
-├── current/              # Current accounts module (Java EJB)
-├── loan/                 # Loans module (Java EJB)
-├── customer/             # Customers module (Java EJB)
-├── deposit/              # Deposit accounts module (C# ASP.NET)
-├── centralizer/          # Web interface (Java Servlet)
-├── Bank-ear/             # EAR packaging module
-├── wildfly-scripts/      # Deployment automation scripts
-├── pom.xml               # Maven parent POM
-└── database-setup.sql    # Database initialization
+├── current/                    # Current accounts module (Java EJB)
+├── loan/                       # Loans module (Java EJB)
+├── customer/                   # Customers module (Java EJB)
+├── deposit/                    # Deposit accounts module (C# ASP.NET)
+├── centralizer/                # Web interface (Java Servlet)
+├── Bank-ear/                   # EAR packaging module
+├── wildfly-scripts/            # Deployment automation scripts
+├── pom.xml                     # Maven parent POM
+├── Create.sql                  # Complete database creation script
+├── DATABASE-EXPLANATION.md     # Database documentation
+├── DATABASE-DIAGRAM.txt        # Visual database diagram
+├── DEPLOYMENT-CHECKLIST.md     # Deployment checklist
+└── WILDFLY-SETUP-GUIDE.md      # Complete setup guide
 ```
 
 ---
