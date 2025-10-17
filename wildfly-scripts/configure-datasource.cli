@@ -1,0 +1,17 @@
+# Script JBoss CLI pour configurer le DataSource BankDS
+# Usage: jboss-cli.bat --connect --file=configure-datasource.cli
+#
+# IMPORTANT: Avant d'exécuter ce script :
+# 1. Modifiez les paramètres de connexion ci-dessous (URL, user, password)
+# 2. Assurez-vous que PostgreSQL est démarré
+# 3. Assurez-vous que la base de données 's5-bank' existe
+# 4. Assurez-vous que le driver PostgreSQL est configuré (exécutez configure-driver.cli d'abord)
+
+# Créer le DataSource
+# MODIFIEZ les paramètres de connexion selon votre configuration
+data-source add --name=BankDS --jndi-name=java:/BankDS --driver-name=postgresql --connection-url=jdbc:postgresql://localhost:5432/s5-bank --user-name=postgres --password=postgres --use-ccm=true --max-pool-size=25 --blocking-timeout-wait-millis=5000 --enabled=true --driver-class=org.postgresql.Driver --jta=true --use-java-context=true --valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker --exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter
+
+# Tester la connexion
+/subsystem=datasources/data-source=BankDS:test-connection-in-pool
+
+echo "DataSource BankDS configuré et testé avec succès !"

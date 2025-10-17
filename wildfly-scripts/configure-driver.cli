@@ -1,0 +1,17 @@
+# Script JBoss CLI pour configurer le driver PostgreSQL
+# Usage: jboss-cli.bat --connect --file=configure-driver.cli
+#
+# IMPORTANT: Avant d'exécuter ce script :
+# 1. Téléchargez postgresql-42.7.3.jar depuis https://jdbc.postgresql.org/download/
+# 2. Modifiez le chemin ci-dessous avec le chemin réel de votre fichier JAR
+# 3. Assurez-vous que WildFly est démarré
+
+# Ajouter le module PostgreSQL
+# REMPLACEZ C:\temp\postgresql-42.7.3.jar par le chemin réel de votre JAR
+module add --name=org.postgresql --resources=C:\temp\postgresql-42.7.3.jar --dependencies=javax.api,javax.transaction.api
+
+# Enregistrer le driver JDBC
+/subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql,driver-class-name=org.postgresql.Driver,driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
+
+# Afficher la confirmation
+echo "Driver PostgreSQL configuré avec succès !"
