@@ -53,7 +53,7 @@ Vous devriez voir `s5-bank` dans la liste.
 ### 3.1 Démarrer WildFly (si pas encore démarré)
 Ouvrez un terminal et démarrez WildFly :
 ```cmd
-cd C:\path\to\wildfly\bin
+cd D:\wildfly\bin
 standalone.bat
 ```
 Laissez cette fenêtre ouverte.
@@ -61,7 +61,7 @@ Laissez cette fenêtre ouverte.
 ### 3.2 Ouvrir JBoss CLI
 Ouvrez un **NOUVEAU** terminal et lancez JBoss CLI :
 ```cmd
-cd C:\path\to\wildfly\bin
+cd D:\wildfly\bin
 jboss-cli.bat --connect
 ```
 
@@ -74,7 +74,7 @@ Vous devriez voir :
 Dans JBoss CLI, exécutez cette commande (remplacez le chemin par votre fichier JAR) :
 
 ```bash
-module add --name=org.postgresql --resources=C:\temp\postgresql-42.7.3.jar --dependencies=javax.api,javax.transaction.api
+module add --name=org.postgresql --resources=C:\postgresql-42.7.3.jar --dependencies=javax.api,javax.transaction.api
 ```
 
 **Note** : Utilisez le chemin complet vers votre fichier JAR téléchargé.
