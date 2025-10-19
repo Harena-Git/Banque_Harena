@@ -29,12 +29,12 @@
 
 -- Table principale: Clients
 CREATE TABLE IF NOT EXISTS customers (
-    id BIGSERIAL PRIMARY KEY,
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    phone VARCHAR(255) NOT NULL,
-    address VARCHAR(255) NOT NULL,
+    id BIGSERIAL PRIMARY KEY, -- Identifiant unique du client
+    first_name VARCHAR(255) NOT NULL, -- Prénom du client
+    last_name VARCHAR(255) NOT NULL, -- Nom du client
+    email VARCHAR(255) NOT NULL UNIQUE, -- Email unique du client (utilisé pour l'authentification)
+    phone VARCHAR(255) NOT NULL, -- Numéro de téléphone du client
+    address VARCHAR(255) NOT NULL, -- Adresse du client
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP
 );
@@ -45,8 +45,8 @@ COMMENT ON COLUMN customers.created_at IS 'Date de création du compte client';
 
 -- Table de liaison: Client <-> Comptes d'épargne (Deposit)
 CREATE TABLE IF NOT EXISTS customer_deposit_accounts (
-    customer_id BIGINT NOT NULL,
-    deposit_account_id BIGINT NOT NULL,
+    customer_id BIGINT NOT NULL, -- Identifiant du client
+    deposit_account_id BIGINT NOT NULL, -- Identifiant du compte d'épargne
     PRIMARY KEY (customer_id, deposit_account_id),
     CONSTRAINT fk_customer_deposit FOREIGN KEY (customer_id) 
         REFERENCES customers(id) ON DELETE CASCADE
@@ -57,8 +57,8 @@ COMMENT ON COLUMN customer_deposit_accounts.deposit_account_id IS 'Référence v
 
 -- Table de liaison: Client <-> Comptes courants (Current)
 CREATE TABLE IF NOT EXISTS customer_current_accounts (
-    customer_id BIGINT NOT NULL,
-    current_account_id BIGINT NOT NULL,
+    customer_id BIGINT NOT NULL, -- Identifiant du client
+    current_account_id BIGINT NOT NULL, -- Identifiant du compte courant
     PRIMARY KEY (customer_id, current_account_id),
     CONSTRAINT fk_customer_current FOREIGN KEY (customer_id) 
         REFERENCES customers(id) ON DELETE CASCADE
@@ -69,8 +69,8 @@ COMMENT ON COLUMN customer_current_accounts.current_account_id IS 'Référence v
 
 -- Table de liaison: Client <-> Prêts (Loan)
 CREATE TABLE IF NOT EXISTS customer_loans (
-    customer_id BIGINT NOT NULL,
-    loan_id BIGINT NOT NULL,
+    customer_id BIGINT NOT NULL, -- Identifiant du client
+    loan_id BIGINT NOT NULL, -- Identifiant du prêt
     PRIMARY KEY (customer_id, loan_id),
     CONSTRAINT fk_customer_loan FOREIGN KEY (customer_id) 
         REFERENCES customers(id) ON DELETE CASCADE
@@ -86,12 +86,12 @@ COMMENT ON COLUMN customer_loans.loan_id IS 'Référence vers loans.id (autre mi
 
 -- Table principale: Comptes courants
 CREATE TABLE IF NOT EXISTS current_accounts (
-    id BIGSERIAL PRIMARY KEY,
-    account_number VARCHAR(255) NOT NULL UNIQUE,
-    customer_id BIGINT NOT NULL,
-    balance DECIMAL(19,2) NOT NULL DEFAULT 0.00,
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id BIGSERIAL PRIMARY KEY, -- Identifiant unique du compte courant
+    account_number VARCHAR(255) NOT NULL UNIQUE, -- Numéro unique du compte courant
+    customer_id BIGINT NOT NULL, -- Identifiant du client
+    balance DECIMAL(19,2) NOT NULL DEFAULT 0.00, -- Solde actuel du compte (peut être négatif si découvert autorisé)
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- Statut du compte (ACTIVE, SUSPENDED, CLOSED)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Date de création du compte
     updated_at TIMESTAMP,
     CONSTRAINT chk_current_status CHECK (status IN ('ACTIVE', 'SUSPENDED', 'CLOSED'))
 );
@@ -104,12 +104,12 @@ COMMENT ON COLUMN current_accounts.status IS 'ACTIVE: compte actif, SUSPENDED: s
 
 -- Table des transactions: Transactions sur comptes courants
 CREATE TABLE IF NOT EXISTS current_transactions (
-    id BIGSERIAL PRIMARY KEY,
-    account_id BIGINT NOT NULL,
-    type VARCHAR(20) NOT NULL,
-    amount DECIMAL(19,2) NOT NULL,
-    balance_after DECIMAL(19,2) NOT NULL,
-    description VARCHAR(500),
+    id BIGSERIAL PRIMARY KEY, -- Identifiant unique de la transaction
+    account_id BIGINT NOT NULL, -- Identifiant du compte courant
+    type VARCHAR(20) NOT NULL, -- Type de transaction (DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT, FEE, INTEREST)
+    amount DECIMAL(19,2) NOT NULL, -- Montant de la transaction
+    balance_after DECIMAL(19,2) NOT NULL, -- Solde après la transaction
+    description VARCHAR(500), -- Description de la transaction
     transaction_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_current_transaction_account FOREIGN KEY (account_id) 
         REFERENCES current_accounts(id) ON DELETE CASCADE,
@@ -134,19 +134,19 @@ CREATE INDEX IF NOT EXISTS idx_current_transactions_date ON current_transactions
 
 -- Table principale: Prêts
 CREATE TABLE IF NOT EXISTS loans (
-    id BIGSERIAL PRIMARY KEY,
-    loan_number VARCHAR(255) NOT NULL UNIQUE,
-    customer_id BIGINT NOT NULL,
-    principal_amount DECIMAL(19,2) NOT NULL,
-    annual_rate DECIMAL(5,2) NOT NULL,
-    duration_months INTEGER NOT NULL,
-    total_amount_due DECIMAL(19,2) NOT NULL,
-    remaining_amount DECIMAL(19,2) NOT NULL,
-    start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP,
+    id BIGSERIAL PRIMARY KEY, -- Identifiant unique du prêt
+    loan_number VARCHAR(255) NOT NULL UNIQUE, -- Numéro unique du prêt
+    customer_id BIGINT NOT NULL, -- Identifiant du client
+    principal_amount DECIMAL(19,2) NOT NULL, -- Montant principal emprunté
+    annual_rate DECIMAL(5,2) NOT NULL, -- Taux d'intérêt annuel
+    duration_months INTEGER NOT NULL, -- Durée du prêt en mois
+    total_amount_due DECIMAL(19,2) NOT NULL, -- Montant total à rembourser (principal + intérêts)
+    remaining_amount DECIMAL(19,2) NOT NULL, -- Montant restant à rembourser
+    start_date TIMESTAMP NOT NULL, -- Date de début du prêt
+    end_date TIMESTAMP NOT NULL, -- Date de fin du prêt
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- Statut du prêt (ACTIVE, PAID, DEFAULTED, CANCELLED)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Date de création du prêt
+    updated_at TIMESTAMP, -- Date de mise à jour du prêt
     CONSTRAINT chk_loan_status CHECK (status IN ('ACTIVE', 'PAID', 'DEFAULTED', 'CANCELLED')),
     CONSTRAINT chk_loan_principal_positive CHECK (principal_amount > 0),
     CONSTRAINT chk_loan_rate_positive CHECK (annual_rate >= 0),
@@ -165,12 +165,12 @@ COMMENT ON COLUMN loans.status IS 'ACTIVE: en cours, PAID: remboursé, DEFAULTED
 
 -- Table des remboursements: Paiements sur prêts
 CREATE TABLE IF NOT EXISTS loan_payments (
-    id BIGSERIAL PRIMARY KEY,
-    loan_id BIGINT NOT NULL,
-    amount DECIMAL(19,2) NOT NULL,
-    remaining_after_payment DECIMAL(19,2) NOT NULL,
-    payment_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    notes VARCHAR(500),
+    id BIGSERIAL PRIMARY KEY, -- Identifiant unique du remboursement
+    loan_id BIGINT NOT NULL, -- Identifiant du prêt
+    amount DECIMAL(19,2) NOT NULL, -- Montant du remboursement
+    remaining_after_payment DECIMAL(19,2) NOT NULL, -- Montant restant dû après ce paiement
+    payment_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Date du remboursement
+    notes VARCHAR(500), -- Notes optionnelles (ex: "Remboursement anticipé")
     CONSTRAINT fk_loan_payment_loan FOREIGN KEY (loan_id) 
         REFERENCES loans(id) ON DELETE CASCADE,
     CONSTRAINT chk_loan_payment_amount_positive CHECK (amount > 0)
@@ -194,12 +194,12 @@ CREATE INDEX IF NOT EXISTS idx_loan_payments_date ON loan_payments(payment_date 
 
 -- Table principale: Comptes d'épargne
 CREATE TABLE IF NOT EXISTS deposit_accounts (
-    id BIGSERIAL PRIMARY KEY,
-    account_number VARCHAR(50) NOT NULL UNIQUE,
-    customer_id BIGINT NOT NULL,
-    balance DECIMAL(19,2) NOT NULL DEFAULT 0.00,
-    annual_rate DECIMAL(5,2) NOT NULL,
-    monthly_withdrawal_limit INTEGER NOT NULL DEFAULT 3,
+    id BIGSERIAL PRIMARY KEY, -- Identifiant unique du compte d'épargne
+    account_number VARCHAR(50) NOT NULL UNIQUE, -- Numéro unique du compte d'épargne
+    customer_id BIGINT NOT NULL, -- Identifiant du client
+    balance DECIMAL(19,2) NOT NULL DEFAULT 0.00, -- Solde actuel du compte
+    annual_rate DECIMAL(5,2) NOT NULL, -- Taux d'intérêt annuel
+    monthly_withdrawal_limit INTEGER NOT NULL DEFAULT 3, -- Limite de retraits mensuels
     withdrawals_this_month INTEGER NOT NULL DEFAULT 0,
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -221,12 +221,12 @@ COMMENT ON COLUMN deposit_accounts.withdrawals_this_month IS 'Nombre de retraits
 
 -- Table des transactions: Transactions sur comptes d'épargne
 CREATE TABLE IF NOT EXISTS deposit_transactions (
-    id BIGSERIAL PRIMARY KEY,
-    account_id BIGINT NOT NULL,
-    type VARCHAR(20) NOT NULL,
-    amount DECIMAL(19,2) NOT NULL,
-    balance_after DECIMAL(19,2) NOT NULL,
-    description VARCHAR(500),
+    id BIGSERIAL PRIMARY KEY, -- Identifiant unique de la transaction
+    account_id BIGINT NOT NULL, -- Identifiant du compte d'épargne
+    type VARCHAR(20) NOT NULL, -- Type de transaction (DEPOSIT, WITHDRAWAL)
+    amount DECIMAL(19,2) NOT NULL, -- Montant de la transaction
+    balance_after DECIMAL(19,2) NOT NULL, -- Solde après la transaction
+    description VARCHAR(500), -- Description de la transaction
     transaction_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_deposit_transaction_account FOREIGN KEY (account_id) 
         REFERENCES deposit_accounts(id) ON DELETE CASCADE,
