@@ -9,7 +9,11 @@ function toggleModule(moduleId) {
 
 // Load page content
 function loadPage(module, page) {
-    event.preventDefault();
+    // Prevent default behavior if event exists
+    if (typeof event !== 'undefined' && event) {
+        event.preventDefault();
+    }
+    
     const contentBody = document.getElementById('content-body');
 
     // Show loading
@@ -35,10 +39,20 @@ function loadPage(module, page) {
             });
         })
         .catch(error => {
+            console.error('Error loading page:', error);
             contentBody.innerHTML = `
                 <div class="page-container">
-                    <div class="error-message">
-                        Failed to load page: ${error.message}
+                    <div class="error-message" style="padding: 20px; background: #f8d7da; color: #721c24; border-radius: 4px; margin: 20px;">
+                        <h3>❌ Failed to load page</h3>
+                        <p><strong>Module:</strong> ${module}</p>
+                        <p><strong>Page:</strong> ${page}.html</p>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p style="margin-top: 15px;">
+                            <strong>Possible causes:</strong><br>
+                            • The page file does not exist in modules/${module}/${page}.html<br>
+                            • The application needs to be redeployed (run redeploy-bank.bat)<br>
+                            • WildFly is not running or the deployment failed
+                        </p>
                     </div>
                 </div>
             `;
