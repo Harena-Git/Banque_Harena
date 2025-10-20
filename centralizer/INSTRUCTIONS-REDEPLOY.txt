@@ -1,0 +1,149 @@
+================================================================================
+  INSTRUCTIONS DE REDÉPLOIEMENT - CENTRALIZER
+================================================================================
+
+PROBLÈME ACTUEL :
+-----------------
+Les nouvelles pages HTML ne s'affichent pas car le projet n'a pas été
+recompilé après leur création. Les fichiers existent dans le code source
+mais pas dans le WAR déployé sur WildFly.
+
+SOLUTION EN 3 ÉTAPES :
+----------------------
+
+ÉTAPE 1 : COMPILER LE PROJET
+-----------------------------
+1. Ouvrir un terminal (CMD ou PowerShell)
+2. Aller dans le dossier centralizer :
+   
+   cd d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena\centralizer
+
+3. Compiler avec Maven :
+   
+   mvn clean package
+
+4. Attendre la fin (vous verrez "BUILD SUCCESS")
+
+
+ÉTAPE 2 : COPIER LE WAR VERS WILDFLY
+-------------------------------------
+1. Copier le fichier WAR généré :
+   
+   copy target\centralizer.war C:\wildfly\standalone\deployments\
+
+2. Créer le marker de déploiement :
+   
+   echo. > C:\wildfly\standalone\deployments\centralizer.war.dodeploy
+
+
+ÉTAPE 3 : VÉRIFIER LE DÉPLOIEMENT
+----------------------------------
+1. Attendre 5-10 secondes
+2. Vérifier qu'un fichier .deployed est créé :
+   
+   C:\wildfly\standalone\deployments\centralizer.war.deployed
+
+3. Ouvrir le navigateur et aller à :
+   
+   http://localhost:8080/centralizer
+
+4. Rafraîchir la page (F5 ou Ctrl+F5)
+5. Tester les menus :
+   - Current Account → List
+   - Deposit Account → List, New, Deposit, Withdraw, Transactions
+   - Loan → List
+
+
+MÉTHODE RAPIDE (SCRIPT AUTOMATIQUE) :
+--------------------------------------
+Double-cliquer sur le fichier :
+
+   redeploy.bat
+
+Ce script fait automatiquement les 3 étapes ci-dessus.
+
+
+FICHIERS CRÉÉS :
+----------------
+✓ modules/current/list.html        (8 KB)
+✓ modules/deposit/list.html        (7 KB)
+✓ modules/deposit/new.html         (4 KB)
+✓ modules/deposit/deposit.html     (5 KB)
+✓ modules/deposit/withdraw.html    (7 KB)
+✓ modules/deposit/transactions.html (6 KB)
+✓ modules/loan/list.html           (9 KB)
+
+
+VÉRIFICATION DES FICHIERS :
+---------------------------
+Tous les fichiers HTML sont présents dans :
+d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena\centralizer\src\main\webapp\modules\
+
+Pour vérifier :
+dir /s /b *.html
+
+
+DÉPANNAGE :
+-----------
+Si les pages sont toujours vides après le redéploiement :
+
+1. Vider le cache du navigateur :
+   - Chrome/Edge : Ctrl + Shift + Delete
+   - Cocher "Images et fichiers en cache"
+   - Cliquer sur "Effacer les données"
+
+2. Redémarrer WildFly :
+   - Arrêter : Ctrl+C dans le terminal WildFly
+   - Redémarrer : C:\wildfly\bin\standalone.bat
+   - Attendre le démarrage complet (environ 30 secondes)
+   - Redéployer avec redeploy.bat
+
+3. Vérifier les logs WildFly :
+   C:\wildfly\standalone\log\server.log
+   Chercher : "Deployed "centralizer.war""
+
+
+SERVICES REQUIS :
+-----------------
+Pour que tout fonctionne, vous devez avoir :
+
+✓ WildFly démarré (port 8080)
+  C:\wildfly\bin\standalone.bat
+
+✓ PostgreSQL démarré (port 5432)
+  Via pgAdmin ou services Windows
+
+✓ Deposit Service C# (port 5000) - OPTIONNEL pour les comptes d'épargne
+  cd d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena\deposit
+  dotnet run
+
+
+URLS À TESTER :
+---------------
+Après le redéploiement, ces URLs doivent fonctionner :
+
+http://localhost:8080/centralizer/
+http://localhost:8080/centralizer/modules/current/list.html
+http://localhost:8080/centralizer/modules/deposit/list.html
+http://localhost:8080/centralizer/modules/loan/list.html
+
+
+RÉSULTAT ATTENDU :
+------------------
+✓ Liste des comptes courants avec recherche et actions
+✓ Liste des comptes d'épargne avec compteur de retraits
+✓ Formulaire de création de compte d'épargne
+✓ Formulaire de dépôt avec recherche par ID/numéro
+✓ Formulaire de retrait avec vérification de limite
+✓ Historique des transactions avec résumé du compte
+✓ Liste des prêts avec filtres par statut
+
+
+AIDE SUPPLÉMENTAIRE :
+---------------------
+Consultez le fichier REDEPLOY-GUIDE.md pour plus de détails.
+
+
+================================================================================
+  FIN DES INSTRUCTIONS
+================================================================================

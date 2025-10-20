@@ -1,0 +1,206 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>Deposit Accounts List</h2>
+        <button class="btn btn-primary" onclick="loadPage('deposit', 'new')">+ New Account</button>
+    </div>
+
+    <div id="message-container"></div>
+
+    <div class="search-box" style="margin-bottom: 20px;">
+        <input type="text" id="search-input" placeholder="Search by account number or customer ID..." 
+               onkeyup="filterAccounts()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+    </div>
+
+    <div class="table-container">
+        <table id="accounts-table">
+            <thead>
+                <tr>
+                    <th>Account Number</th>
+                    <th>Customer ID</th>
+                    <th>Balance</th>
+                    <th>Annual Rate</th>
+                    <th>Withdrawals This Month</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="accounts-tbody">
+                <tr>
+                    <td colspan="7" class="loading">Loading accounts...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let allAccounts = [];
+const DEPOSIT_API_URL = 'http://localhost:5000/api/deposit-accounts';
+
+// Load all accounts
+function loadAccounts() {
+    fetch(DEPOSIT_API_URL)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch accounts');
+            }
+            return response.json();
+        })
+        .then(accounts => {
+            allAccounts = accounts;
+            displayAccounts(accounts);
+        })
+        .catch(error => {
+            console.error('Error loading accounts:', error);
+            document.getElementById('accounts-tbody').innerHTML = 
+                '<tr><td colspan="7" style="text-align: center; color: #c33;">Failed to load accounts. Make sure the Deposit service (C#) is running on port 5000.</td></tr>';
+        });
+}
+
+// Display accounts in table
+function displayAccounts(accounts) {
+    const tbody = document.getElementById('accounts-tbody');
+    
+    if (accounts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">No accounts found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = accounts.map(account => {
+        const withdrawalWarning = account.withdrawalsThisMonth >= account.monthlyWithdrawalLimit 
+            ? 'style="color: #c33; font-weight: bold;"' 
+            : '';
+        const statusClass = account.status === 'ACTIVE' ? 'style="color: #3c3;"' : 'style="color: #999;"';
+        
+        return `
+        <tr>
+            <td>${account.accountNumber}</td>
+            <td>${account.customerId}</td>
+            <td style="color: #3c3;">${formatCurrency(account.balance)}</td>
+            <td>${account.annualRate}%</td>
+            <td ${withdrawalWarning}>${account.withdrawalsThisMonth} / ${account.monthlyWithdrawalLimit}</td>
+            <td ${statusClass}>${account.status}</td>
+            <td>
+                <button class="btn btn-sm" onclick="viewTransactions(${account.id})" 
+                        title="View Transactions" style="background: #4CAF50; color: white; margin: 2px;">
+                    📊 Transactions
+                </button>
+                <button class="btn btn-sm" onclick="quickDeposit(${account.id})" 
+                        title="Deposit" style="background: #2196F3; color: white; margin: 2px;">
+                    ➕ Deposit
+                </button>
+                <button class="btn btn-sm" onclick="quickWithdraw(${account.id}, ${account.withdrawalsThisMonth}, ${account.monthlyWithdrawalLimit})" 
+                        title="Withdraw" style="background: #FF9800; color: white; margin: 2px;">
+                    ➖ Withdraw
+                </button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+// Filter accounts
+function filterAccounts() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const filtered = allAccounts.filter(account => 
+        account.accountNumber.toLowerCase().includes(searchTerm) ||
+        account.customerId.toString().includes(searchTerm)
+    );
+    displayAccounts(filtered);
+}
+
+// View transactions
+function viewTransactions(accountId) {
+    loadPage('deposit', 'transactions');
+    setTimeout(() => {
+        if (window.loadDepositTransactions) {
+            window.loadDepositTransactions(accountId);
+        }
+    }, 500);
+}
+
+// Quick deposit
+function quickDeposit(accountId) {
+    const amount = prompt('Enter deposit amount:');
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        fetch(`${DEPOSIT_API_URL}/${accountId}/deposit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                amount: parseFloat(amount),
+                description: 'Quick deposit'
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Deposit failed');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showMessage('Deposit successful!', 'success');
+            loadAccounts();
+        })
+        .catch(error => {
+            showMessage('Failed to process deposit: ' + error.message, 'error');
+        });
+    }
+}
+
+// Quick withdraw
+function quickWithdraw(accountId, currentWithdrawals, limit) {
+    if (currentWithdrawals >= limit) {
+        showMessage('Monthly withdrawal limit reached! Cannot withdraw.', 'error');
+        return;
+    }
+    
+    const amount = prompt('Enter withdrawal amount:');
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        fetch(`${DEPOSIT_API_URL}/${accountId}/withdraw`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                amount: parseFloat(amount),
+                description: 'Quick withdrawal'
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Withdrawal failed');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showMessage('Withdrawal successful!', 'success');
+            loadAccounts();
+        })
+        .catch(error => {
+            showMessage('Failed to process withdrawal: ' + error.message, 'error');
+        });
+    }
+}
+
+// Format currency
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('fr-FR', { 
+        style: 'currency', 
+        currency: 'EUR' 
+    }).format(amount);
+}
+
+// Show message
+function showMessage(message, type = 'success') {
+    const container = document.getElementById('message-container');
+    const className = type === 'success' ? 'success-message' : 'error-message';
+    container.innerHTML = `<div class="${className}" style="padding: 10px; margin: 10px 0; border-radius: 4px; 
+                            background: ${type === 'success' ? '#d4edda' : '#f8d7da'}; 
+                            color: ${type === 'success' ? '#155724' : '#721c24'}; 
+                            border: 1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'};">
+                            ${message}
+                           </div>`;
+    setTimeout(() => container.innerHTML = '', 3000);
+}
+
+// Load accounts on page load
+loadAccounts();
+</script>

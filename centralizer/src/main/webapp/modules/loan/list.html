@@ -1,0 +1,274 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>Loans List</h2>
+        <button class="btn btn-primary" onclick="loadPage('loan', 'new')">+ New Loan</button>
+    </div>
+
+    <div id="message-container"></div>
+
+    <div class="search-box" style="margin-bottom: 20px;">
+        <input type="text" id="search-input" placeholder="Search by loan number or customer ID..." 
+               onkeyup="filterLoans()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+    </div>
+
+    <div class="filter-buttons" style="margin-bottom: 20px;">
+        <button class="btn btn-sm" onclick="filterByStatus('ALL')" style="background: #607D8B; color: white; margin: 2px;">
+            All Loans
+        </button>
+        <button class="btn btn-sm" onclick="filterByStatus('ACTIVE')" style="background: #4CAF50; color: white; margin: 2px;">
+            Active
+        </button>
+        <button class="btn btn-sm" onclick="filterByStatus('PAID')" style="background: #2196F3; color: white; margin: 2px;">
+            Paid
+        </button>
+        <button class="btn btn-sm" onclick="filterByStatus('DEFAULTED')" style="background: #f44336; color: white; margin: 2px;">
+            Defaulted
+        </button>
+        <button class="btn btn-sm" onclick="filterByStatus('CANCELLED')" style="background: #9E9E9E; color: white; margin: 2px;">
+            Cancelled
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table id="loans-table">
+            <thead>
+                <tr>
+                    <th>Loan Number</th>
+                    <th>Customer ID</th>
+                    <th>Principal Amount</th>
+                    <th>Annual Rate</th>
+                    <th>Duration</th>
+                    <th>Total Due</th>
+                    <th>Remaining</th>
+                    <th>Status</th>
+                    <th>End Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="loans-tbody">
+                <tr>
+                    <td colspan="10" class="loading">Loading loans...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let allLoans = [];
+let currentStatusFilter = 'ALL';
+
+// Load all loans
+function loadLoans() {
+    fetch('/centralizer/loans/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch loans');
+            }
+            return response.json();
+        })
+        .then(loans => {
+            allLoans = loans;
+            displayLoans(loans);
+        })
+        .catch(error => {
+            console.error('Error loading loans:', error);
+            document.getElementById('loans-tbody').innerHTML = 
+                '<tr><td colspan="10" style="text-align: center; color: #c33;">Failed to load loans: ' + error.message + '</td></tr>';
+        });
+}
+
+// Display loans in table
+function displayLoans(loans) {
+    const tbody = document.getElementById('loans-tbody');
+    
+    if (loans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 20px; color: #999;">No loans found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = loans.map(loan => {
+        const statusColors = {
+            'ACTIVE': '#4CAF50',
+            'PAID': '#2196F3',
+            'DEFAULTED': '#f44336',
+            'CANCELLED': '#9E9E9E'
+        };
+        const statusColor = statusColors[loan.status] || '#607D8B';
+        const remainingClass = loan.remainingAmount > 0 ? 'style="color: #c33; font-weight: bold;"' : 'style="color: #3c3;"';
+        
+        return `
+        <tr>
+            <td>${loan.loanNumber}</td>
+            <td>${loan.customerId}</td>
+            <td>${formatCurrency(loan.principalAmount)}</td>
+            <td>${loan.annualRate}%</td>
+            <td>${loan.durationMonths} months</td>
+            <td>${formatCurrency(loan.totalAmountDue)}</td>
+            <td ${remainingClass}>${formatCurrency(loan.remainingAmount)}</td>
+            <td><span style="padding: 4px 8px; border-radius: 4px; background: ${statusColor}; color: white; font-size: 0.85em;">
+                ${loan.status}
+            </span></td>
+            <td>${formatDate(loan.endDate)}</td>
+            <td>
+                ${loan.status === 'ACTIVE' ? `
+                    <button class="btn btn-sm" onclick="makePayment(${loan.id})" 
+                            title="Make Payment" style="background: #4CAF50; color: white; margin: 2px;">
+                        💰 Pay
+                    </button>
+                ` : ''}
+                <button class="btn btn-sm" onclick="viewPayments(${loan.id})" 
+                        title="View Payments" style="background: #2196F3; color: white; margin: 2px;">
+                    📊 History
+                </button>
+                ${loan.status === 'ACTIVE' ? `
+                    <button class="btn btn-sm" onclick="cancelLoan(${loan.id})" 
+                            title="Cancel Loan" style="background: #f44336; color: white; margin: 2px;">
+                        ❌
+                    </button>
+                ` : ''}
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+// Filter loans by search term
+function filterLoans() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    let filtered = allLoans;
+    
+    if (currentStatusFilter !== 'ALL') {
+        filtered = filtered.filter(loan => loan.status === currentStatusFilter);
+    }
+    
+    if (searchTerm) {
+        filtered = filtered.filter(loan => 
+            loan.loanNumber.toLowerCase().includes(searchTerm) ||
+            loan.customerId.toString().includes(searchTerm)
+        );
+    }
+    
+    displayLoans(filtered);
+}
+
+// Filter by status
+function filterByStatus(status) {
+    currentStatusFilter = status;
+    filterLoans();
+}
+
+// Make payment
+function makePayment(loanId) {
+    const amount = prompt('Enter payment amount:');
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        fetch(`/centralizer/loans/${loanId}/payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                amount: parseFloat(amount),
+                notes: 'Payment from loan list'
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Payment failed');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showMessage('Payment successful!', 'success');
+            loadLoans();
+        })
+        .catch(error => {
+            showMessage('Failed to process payment: ' + error.message, 'error');
+        });
+    }
+}
+
+// View payments history
+function viewPayments(loanId) {
+    fetch(`/centralizer/loans/${loanId}/payments`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load payments');
+            }
+            return response.json();
+        })
+        .then(payments => {
+            if (payments.length === 0) {
+                alert('No payments found for this loan.');
+                return;
+            }
+            
+            let message = 'Payment History:\n\n';
+            payments.forEach((payment, index) => {
+                message += `${index + 1}. ${formatDate(payment.paymentDate)}\n`;
+                message += `   Amount: ${formatCurrency(payment.amount)}\n`;
+                message += `   Remaining: ${formatCurrency(payment.remainingAfterPayment)}\n`;
+                if (payment.notes) {
+                    message += `   Notes: ${payment.notes}\n`;
+                }
+                message += '\n';
+            });
+            
+            alert(message);
+        })
+        .catch(error => {
+            showMessage('Failed to load payment history: ' + error.message, 'error');
+        });
+}
+
+// Cancel loan
+function cancelLoan(loanId) {
+    if (confirm('Are you sure you want to cancel this loan? This action cannot be undone.')) {
+        fetch(`/centralizer/loans/${loanId}/cancel`, {
+            method: 'PUT'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Cancellation failed');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showMessage('Loan cancelled successfully!', 'success');
+            loadLoans();
+        })
+        .catch(error => {
+            showMessage('Failed to cancel loan: ' + error.message, 'error');
+        });
+    }
+}
+
+// Format currency
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('fr-FR', { 
+        style: 'currency', 
+        currency: 'EUR' 
+    }).format(amount);
+}
+
+// Format date
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR');
+}
+
+// Show message
+function showMessage(message, type = 'success') {
+    const container = document.getElementById('message-container');
+    const className = type === 'success' ? 'success-message' : 'error-message';
+    container.innerHTML = `<div class="${className}" style="padding: 10px; margin: 10px 0; border-radius: 4px; 
+                            background: ${type === 'success' ? '#d4edda' : '#f8d7da'}; 
+                            color: ${type === 'success' ? '#155724' : '#721c24'}; 
+                            border: 1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'};">
+                            ${message}
+                           </div>`;
+    setTimeout(() => container.innerHTML = '', 3000);
+}
+
+// Load loans on page load
+loadLoans();
+</script>
