@@ -1,11 +1,26 @@
-# 🔄 Guide de Redéploiement - Centralizer
+# 🔄 Guide de Redéploiement - Bank Application (EAR)
 
 ## ❗ Problème Rencontré
 
 Les nouvelles pages HTML créées ne s'affichent pas dans l'interface web car :
-- ✅ Les fichiers existent dans `src/main/webapp/modules/`
-- ❌ Mais ils ne sont pas dans le WAR déployé sur WildFly
-- ❌ Le projet n'a pas été recompilé après la création des fichiers
+- ✅ Les fichiers existent dans `centralizer/src/main/webapp/modules/`
+- ❌ Mais ils ne sont pas dans le **Bank.ear** déployé sur WildFly
+- ❌ Le projet complet n'a pas été recompilé après la création des fichiers
+
+## 🎯 Architecture du Projet
+
+Ce projet utilise une architecture **EAR (Enterprise Archive)** :
+
+```
+Bank-parent (pom.xml racine)
+├── customer (EJB)
+├── current (EJB)
+├── loan (EJB)
+├── centralizer (WAR) ← Contient les pages HTML
+└── Bank-ear (EAR) ← Package final déployé sur WildFly
+```
+
+**Important** : Il faut compiler depuis la **racine** pour reconstruire le **Bank.ear** complet !
 
 ---
 
@@ -13,51 +28,54 @@ Les nouvelles pages HTML créées ne s'affichent pas dans l'interface web car :
 
 ### Option 1 : Utiliser le Script Automatique (RECOMMANDÉ)
 
-1. **Double-cliquer sur** `redeploy.bat` dans le dossier `centralizer`
-2. Attendre la fin du build Maven
-3. Le WAR sera automatiquement copié dans WildFly
-4. Attendre 5-10 secondes que WildFly redéploie
-5. Rafraîchir votre navigateur (F5)
+1. **Double-cliquer sur** `redeploy-bank.bat` à la **racine** du projet
+2. Attendre la fin du build Maven (tous les modules)
+3. Le Bank.ear sera automatiquement copié dans WildFly
+4. Attendre **10-15 secondes** que WildFly redéploie (EAR = plus long)
+5. Rafraîchir votre navigateur (Ctrl+F5)
 
 ### Option 2 : Commandes Manuelles
 
 ```bash
-# 1. Aller dans le dossier centralizer
-cd d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena\centralizer
+# 1. Aller à la RACINE du projet (pas dans centralizer !)
+cd d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena
 
-# 2. Compiler le projet
+# 2. Compiler TOUS les modules
 mvn clean package
 
-# 3. Copier le WAR vers WildFly
-copy target\centralizer.war C:\wildfly\standalone\deployments\
+# 3. Copier le Bank.ear vers WildFly
+copy Bank-ear\target\Bank.ear D:\wildfly\standalone\deployments\
 
 # 4. Créer le marker de déploiement
-echo. > C:\wildfly\standalone\deployments\centralizer.war.dodeploy
+echo. > D:\wildfly\standalone\deployments\Bank.ear.dodeploy
 ```
 
 ---
 
 ## 📋 Vérification
 
-### 1. Vérifier que le WAR est créé
+### 1. Vérifier que le Bank.ear est créé
 ```
-d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena\centralizer\target\centralizer.war
+d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena\Bank-ear\target\Bank.ear
 ```
-✅ Ce fichier doit exister et avoir une date/heure récente
+✅ Ce fichier doit exister et avoir une date/heure récente (plusieurs MB)
 
-### 2. Vérifier le déploiement WildFly
-```
-C:\wildfly\standalone\deployments\centralizer.war
-C:\wildfly\standalone\deployments\centralizer.war.deployed
-```
-✅ Le fichier `.deployed` doit apparaître après quelques secondes
+### 2. Vérifier que le centralizer.war est dans le EAR
+Le centralizer.war doit être inclus dans le Bank.ear avec les nouveaux fichiers HTML.
 
-### 3. Vérifier les logs WildFly
-Ouvrir : `C:\wildfly\standalone\log\server.log`
+### 3. Vérifier le déploiement WildFly
+```
+D:\wildfly\standalone\deployments\Bank.ear
+D:\wildfly\standalone\deployments\Bank.ear.deployed
+```
+✅ Le fichier `.deployed` doit apparaître après 10-15 secondes
+
+### 4. Vérifier les logs WildFly
+Ouvrir : `D:\wildfly\standalone\log\server.log`
 
 Chercher :
 ```
-Deployed "centralizer.war"
+Deployed "Bank.ear" (runtime-name : "Bank.ear")
 ```
 
 ### 4. Tester dans le navigateur

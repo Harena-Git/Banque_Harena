@@ -14,7 +14,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [2/3] Copying WAR to WildFly deployments...
-copy /Y target\centralizer.war C:\wildfly\standalone\deployments\
+copy /Y target\centralizer.war D:\wildfly\standalone\deployments\
 if %errorlevel% neq 0 (
     echo ERROR: Failed to copy WAR file!
     echo Make sure WildFly is installed at C:\wildfly\
@@ -24,7 +24,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [3/3] Creating deployment marker...
-echo. > C:\wildfly\standalone\deployments\centralizer.war.dodeploy
+echo. > D:\wildfly\standalone\deployments\centralizer.war.dodeploy
 
 echo.
 echo ========================================

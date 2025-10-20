@@ -1,0 +1,136 @@
+================================================================================
+  ⚠️ IMPORTANT - REDÉPLOIEMENT BANK.EAR ⚠️
+================================================================================
+
+PROBLÈME :
+----------
+Les nouvelles pages HTML ne s'affichent pas car le projet utilise une 
+architecture EAR (Enterprise Archive). Il faut recompiler TOUT le projet
+depuis la RACINE, pas juste le module centralizer.
+
+ARCHITECTURE :
+--------------
+Bank-parent (racine)
+├── customer (EJB)
+├── current (EJB)
+├── loan (EJB)
+├── centralizer (WAR) ← Contient les pages HTML
+└── Bank-ear (EAR) ← FICHIER FINAL déployé sur WildFly
+
+
+SOLUTION RAPIDE :
+-----------------
+1. Double-cliquer sur ce fichier à la RACINE du projet :
+   
+   redeploy-bank.bat
+
+2. Attendre la fin du build (environ 1-2 minutes)
+
+3. Attendre 10-15 secondes que WildFly redéploie
+
+4. Rafraîchir le navigateur (Ctrl+F5)
+
+
+COMMANDES MANUELLES :
+---------------------
+Si le script ne fonctionne pas, exécuter dans un terminal :
+
+cd d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena
+mvn clean package
+copy Bank-ear\target\Bank.ear D:\wildfly\standalone\deployments\
+echo. > D:\wildfly\standalone\deployments\Bank.ear.dodeploy
+
+
+VÉRIFICATION :
+--------------
+1. Vérifier que Bank.ear existe :
+   d:\Cours\Architecture_Mr_Tahina\Bank\Banque_Harena\Bank-ear\target\Bank.ear
+
+2. Vérifier le déploiement WildFly :
+   D:\wildfly\standalone\deployments\Bank.ear.deployed
+   (Ce fichier doit apparaître après 10-15 secondes)
+
+3. Vérifier les logs WildFly :
+   D:\wildfly\standalone\log\server.log
+   Chercher : "Deployed "Bank.ear""
+
+4. Tester dans le navigateur :
+   http://localhost:8080/centralizer
+
+
+ERREURS COURANTES :
+-------------------
+❌ "mvn: command not found"
+   → Maven n'est pas installé ou pas dans le PATH
+   → Installer Maven : https://maven.apache.org/download.cgi
+
+❌ "BUILD FAILURE"
+   → Lire les messages d'erreur Maven
+   → Vérifier que Java JDK 21 est installé
+   → Vérifier que PostgreSQL est démarré
+
+❌ Les pages sont toujours vides
+   → Vider le cache du navigateur (Ctrl+Shift+Delete)
+   → Redémarrer WildFly
+   → Vérifier que Bank.ear.deployed existe
+   → Vérifier les logs WildFly
+
+
+FICHIERS CRÉÉS :
+----------------
+✓ modules/current/list.html        (8 KB)
+✓ modules/deposit/list.html        (7 KB)
+✓ modules/deposit/new.html         (4 KB)
+✓ modules/deposit/deposit.html     (5 KB)
+✓ modules/deposit/withdraw.html    (7 KB)
+✓ modules/deposit/transactions.html (6 KB)
+✓ modules/loan/list.html           (9 KB)
+
+
+ORDRE DE BUILD MAVEN :
+----------------------
+Maven compile dans cet ordre :
+1. customer (EJB)
+2. current (EJB)
+3. loan (EJB)
+4. centralizer (WAR) ← Inclut les nouveaux fichiers HTML
+5. Bank-ear (EAR) ← Package tout ensemble
+
+C'est pourquoi il faut compiler depuis la RACINE !
+
+
+TEMPS DE DÉPLOIEMENT :
+----------------------
+- Build Maven : 1-2 minutes
+- Déploiement EAR sur WildFly : 10-15 secondes
+- Total : environ 2-3 minutes
+
+Soyez patient ! Le déploiement d'un EAR est plus long qu'un WAR simple.
+
+
+APRÈS LE REDÉPLOIEMENT :
+------------------------
+Vous devriez voir dans l'interface :
+
+✓ Current Account → List
+  → Liste complète avec recherche et actions rapides
+
+✓ Deposit Account → List, New, Deposit, Withdraw, Transactions
+  → Toutes les pages fonctionnelles
+  → Gestion de la limite de retraits (3 par mois)
+
+✓ Loan → List
+  → Liste avec filtres par statut
+  → Paiements rapides
+
+
+AIDE :
+------
+Pour plus de détails, consultez :
+- REDEPLOY-GUIDE.md (guide complet)
+- INTERFACE-COMPLETE.md (documentation des fonctionnalités)
+
+
+================================================================================
+  FIN DES INSTRUCTIONS
+================================================================================
